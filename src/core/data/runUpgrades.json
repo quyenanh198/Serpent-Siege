@@ -1,0 +1,38 @@
+[
+  { "id": "damage", "name": "Damage +", "desc": "+{v}% bullet damage", "value": 20, "max": 5 },
+  { "id": "rapid", "name": "Rapid fire", "desc": "+{v}% fire rate", "value": 20, "max": 5 },
+  { "id": "multishot", "name": "Multishot", "desc": "+{v} bullet in a spread", "value": 1, "max": 4 },
+  { "id": "pierce", "name": "Pierce", "desc": "Bullets pass through +{v} segment", "value": 1, "max": 3 },
+  {
+    "id": "ricochet",
+    "name": "Ricochet",
+    "desc": "Bullets bounce off edges +{v} time",
+    "value": 1,
+    "max": 3
+  },
+  {
+    "id": "explosive",
+    "name": "Explosive",
+    "desc": "Hits splash {v}% to the next segment",
+    "value": 50,
+    "max": 3
+  },
+  { "id": "frost", "name": "Frost", "desc": "Hits slow the snake {v}% for 2 s", "value": 10, "max": 4 },
+  { "id": "keen", "name": "Keen eye", "desc": "+{v}% crit chance", "value": 5, "max": 5 },
+  { "id": "deadly", "name": "Deadly", "desc": "+{v}% crit damage", "value": 25, "max": 5 },
+  {
+    "id": "chain",
+    "name": "Chain spark",
+    "desc": "Every 5th shot jumps to {v} more segments",
+    "value": 2,
+    "max": 3
+  },
+  { "id": "rewind", "name": "Rewind", "desc": "Push the snake back {v}% of the path", "value": 15, "max": 3 },
+  {
+    "id": "headHunter",
+    "name": "Head hunter",
+    "desc": "+{v}% damage to the head segment",
+    "value": 50,
+    "max": 3
+  }
+]

@@ -1,0 +1,47 @@
+{
+  "view": { "width": 720, "height": 1280 },
+  "ball": { "diameter": 30 },
+  "bullet": { "speed": 1100, "radius": 6, "spreadDeg": 7 },
+  "turret": { "turnSpeed": 31.4 },
+  "base": { "attack": 10, "fireRate": 4, "critChance": 0, "critDamage": 1.5 },
+  "snake": {
+    "hpBase": 240,
+    "hpGrowth": 1.25,
+    "hpFrontMult": 0.6,
+    "hpTailMult": 1.6,
+    "upgradeHpMult": 0.5,
+    "gapCloseTime": 0.3,
+    "introSpeedMult": 5,
+    "introUntil": 0.18
+  },
+  "segmentTypes": { "armoredReduction": 10 },
+  "difficulty": {
+    "standard": { "hp": 1.0, "speed": 1.0, "count": 1.0, "special": 0 },
+    "hard": { "hp": 1.5, "speed": 1.15, "count": 1.1, "special": 0.1 },
+    "expert": { "hp": 2.2, "speed": 1.3, "count": 1.2, "special": 0.2 }
+  },
+  "shop": {
+    "attack": { "perRank": 0.05, "costBase": 10, "costGrowth": 1.05, "maxRank": null },
+    "attackSpeed": { "perRank": 0.03, "costBase": 10, "costGrowth": 1.05, "maxRank": null },
+    "critChance": { "perRank": 0.01, "costBase": 15, "costGrowth": 1.05, "maxRank": 60 },
+    "critDamage": { "perRank": 0.05, "costBase": 15, "costGrowth": 1.05, "maxRank": null }
+  },
+  "gold": {
+    "perSegmentHp": 0.0006,
+    "clearMult": 2,
+    "firstClearRuns": 0.5,
+    "comebackPerFail": 0.1,
+    "comebackMax": 0.5
+  },
+  "endless": {
+    "hpBase": 240,
+    "hpGrowth": 1.03,
+    "speed": 34,
+    "speedGrowthEvery": 10,
+    "speedGrowth": 1.03,
+    "speedMax": 70,
+    "startFraction": 0.2,
+    "minQueued": 30,
+    "special": 0.15
+  }
+}
