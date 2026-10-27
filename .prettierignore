@@ -1,0 +1,6 @@
+dist
+node_modules
+backend/pb_data
+backend/pb_public
+src/core/stages/*.json
+package-lock.json

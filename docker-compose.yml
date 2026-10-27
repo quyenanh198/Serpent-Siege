@@ -1,0 +1,10 @@
+services:
+  pocketbase:
+    build: .
+    image: serpent-siege:latest
+    restart: unless-stopped
+    ports:
+      - '8090:8090'
+    volumes:
+      # Database and backups. Back this folder up.
+      - ./backend/pb_data:/pb/pb_data

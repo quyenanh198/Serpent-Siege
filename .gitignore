@@ -1,0 +1,7 @@
+node_modules
+dist
+backend/pb_data
+backend/pb_public
+test-results
+playwright-report
+.pb-test

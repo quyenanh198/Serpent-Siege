@@ -1,0 +1,37 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      PB_VERSION: 0.40.5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - name: Start PocketBase with the project migrations
+        run: |
+          curl -fsSL -o pb.zip "https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/pocketbase_${PB_VERSION}_linux_amd64.zip"
+          unzip -q pb.zip -d pb
+          ./pb/pocketbase serve --http=127.0.0.1:8090 --dir=./pb/data --migrationsDir=./backend/pb_migrations &
+          for i in $(seq 1 20); do curl -fs http://127.0.0.1:8090/api/health && break; sleep 1; done
+      - name: Unit, balance and PocketBase integration tests
+        run: npm test
+        env:
+          PB_URL: http://127.0.0.1:8090
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
