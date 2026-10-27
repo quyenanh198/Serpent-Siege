@@ -12,76 +12,88 @@ class Mem implements KeyValue {
   }
 }
 
-/** Tiny fake of the PocketBase records API. */
+/** Tiny fake of the /api/serpent routes: the "session" decides who is calling. */
 function fakeServer() {
-  const records = new Map<string, Record<string, unknown>>();
+  const records = new Map<number, { id: string; name: string; save: unknown; save_backup?: unknown }>();
   let down = false;
-  let n = 0;
-  const fetchFn: FetchFn = async (url, init) => {
-    if (down) throw new Error('offline');
-    const reply = (status: number, body: unknown) => ({ ok: status < 300, status, json: async () => body });
-    const m = url.match(/records\/?([^?]*)/)!;
-    const id = m[1];
-    const method = init?.method ?? 'GET';
-    if (method === 'GET' && !id) return reply(200, { items: [...records.values()] });
-    if (method === 'GET') return records.has(id) ? reply(200, records.get(id)) : reply(404, {});
-    if (method === 'POST') {
-      const body = JSON.parse(init!.body!);
-      if ([...records.values()].some((r) => r.name === body.name)) return reply(400, {});
-      const rec = { id: `r${++n}`, ...body };
-      records.set(rec.id, rec);
-      return reply(200, rec);
-    }
-    if (method === 'PATCH') {
-      Object.assign(records.get(id)!, JSON.parse(init!.body!));
-      return reply(200, records.get(id));
-    }
-    return reply(405, {});
-  };
-  return { records, fetchFn, setDown: (v: boolean) => (down = v) };
+  const as =
+    (chatId: number | null, name = `user${chatId}`): FetchFn =>
+    async (url, init) => {
+      if (down) throw new Error('offline');
+      const reply = (status: number, body: unknown) => ({ ok: status < 300, status, json: async () => body });
+      if (chatId === null) return reply(401, { error: 'not_logged_in' });
+      if (!records.has(chatId)) records.set(chatId, { id: `r${chatId}`, name, save: null });
+      const rec = records.get(chatId)!;
+      const method = init?.method ?? 'GET';
+      if (url.endsWith('/api/serpent/me')) return reply(200, { id: rec.id, name: rec.name });
+      if (url.endsWith('/api/serpent/save') && method === 'GET') return reply(200, rec);
+      if (url.endsWith('/api/serpent/save') && method === 'PATCH') {
+        Object.assign(rec, JSON.parse(init!.body!));
+        return reply(200, { ok: true });
+      }
+      return reply(404, {});
+    };
+  return { records, as, setDown: (v: boolean) => (down = v) };
 }
 
 describe('save store', () => {
-  it('creates, lists, saves and loads a profile', async () => {
+  it('signs in as the Chat account, saves and loads; another device sees the same progress', async () => {
     const srv = fakeServer();
-    const store = new SaveStore('', srv.fetchFn, new Mem());
-    const p = await store.createProfile('Ken');
-    expect(await store.listProfiles()).toEqual([{ id: p.id, name: 'Ken' }]);
-    await store.save(p.id, { ...defaultSave('Ken'), gold: 42, updated: 1 });
-    // a second device sees the same progress
-    const other = new SaveStore('', srv.fetchFn, new Mem());
-    expect((await other.load(p)).gold).toBe(42);
+    const store = new SaveStore('', srv.as(7, 'Ken'), new Mem());
+    const who = await store.whoami();
+    expect(who).toEqual({ kind: 'player', profile: { id: 'r7', name: 'Ken' } });
+    const p = who.kind === 'player' ? who.profile : null;
+    expect((await store.load(p!)).gold).toBe(0); // first visit: fresh save
+    await store.save(p!.id, { ...defaultSave('Ken'), gold: 42, updated: 1 });
+    const other = new SaveStore('', srv.as(7, 'Ken'), new Mem());
+    expect((await other.load(p!)).gold).toBe(42);
   });
 
-  it('duplicate names are refused', async () => {
+  it('players only ever reach their own save', async () => {
     const srv = fakeServer();
-    const store = new SaveStore('', srv.fetchFn, new Mem());
-    await store.createProfile('Ken');
-    await expect(store.createProfile('Ken')).rejects.toThrow();
+    const a = new SaveStore('', srv.as(1), new Mem());
+    const b = new SaveStore('', srv.as(2), new Mem());
+    const pa = (await a.whoami()) as { kind: 'player'; profile: { id: string; name: string } };
+    const pb = (await b.whoami()) as { kind: 'player'; profile: { id: string; name: string } };
+    await a.save(pa.profile.id, { ...defaultSave('a'), gold: 5, updated: 1 });
+    expect((await b.load(pb.profile)).gold).toBe(0);
+  });
+
+  it('asks to sign in to Chat without a session', async () => {
+    const srv = fakeServer();
+    expect(await new SaveStore('', srv.as(null), new Mem()).whoami()).toEqual({ kind: 'login' });
   });
 
   it('falls back to the local cache when the server is down, then syncs the newer copy', async () => {
     const srv = fakeServer();
     const mem = new Mem();
-    const store = new SaveStore('', srv.fetchFn, mem);
-    const p = await store.createProfile('Ana');
+    const store = new SaveStore('', srv.as(3, 'Ana'), mem);
+    const who = await store.whoami();
+    const p = who.kind === 'player' ? who.profile : null;
     srv.setDown(true);
-    expect(await store.save(p.id, { ...defaultSave('Ana'), gold: 7, updated: 5 })).toBe(false);
+    expect(await store.save(p!.id, { ...defaultSave('Ana'), gold: 7, updated: 5 })).toBe(false);
     expect(store.online).toBe(false);
-    expect((await store.load(p)).gold).toBe(7);
-    expect(await store.listProfiles()).toEqual([p]);
+    expect((await store.load(p!)).gold).toBe(7);
+    // Offline, the last player on this device keeps playing.
+    expect(await store.whoami()).toEqual({ kind: 'player', profile: p });
     srv.setDown(false);
-    expect((await store.load(p)).gold).toBe(7);
-    expect((srv.records.get(p.id)!.save as { gold: number }).gold).toBe(7);
+    expect((await store.load(p!)).gold).toBe(7);
+    expect((srv.records.get(3)!.save as { gold: number }).gold).toBe(7);
+  });
+
+  it('offline on a device that never signed in plays locally', async () => {
+    const srv = fakeServer();
+    srv.setDown(true);
+    expect(await new SaveStore('', srv.as(4), new Mem()).whoami()).toEqual({ kind: 'offline' });
   });
 
   it('a corrupt server save falls back to defaults and is kept in save_backup', async () => {
     const srv = fakeServer();
-    const store = new SaveStore('', srv.fetchFn, new Mem());
-    const p = await store.createProfile('Bo');
-    srv.records.get(p.id)!.save = 'garbage';
-    const s = await store.load(p);
+    const store = new SaveStore('', srv.as(5, 'Bo'), new Mem());
+    const who = await store.whoami();
+    srv.records.get(5)!.save = 'garbage';
+    const s = await store.load((who as { kind: 'player'; profile: { id: string; name: string } }).profile);
     expect(s.gold).toBe(0);
-    expect(srv.records.get(p.id)!.save_backup).toBe('garbage');
+    expect(srv.records.get(5)!.save_backup).toBe('garbage');
   });
 });

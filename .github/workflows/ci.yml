@@ -18,11 +18,13 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
-      - name: Start PocketBase with the project migrations
+      - name: Start a fake Chat and PocketBase with the project migrations and hooks
         run: |
+          node tests/fake-chat.mjs 8082 &
           curl -fsSL -o pb.zip "https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/pocketbase_${PB_VERSION}_linux_amd64.zip"
           unzip -q pb.zip -d pb
-          ./pb/pocketbase serve --http=127.0.0.1:8090 --dir=./pb/data --migrationsDir=./backend/pb_migrations &
+          CHAT_API_URL=http://127.0.0.1:8082 ./pb/pocketbase serve --http=127.0.0.1:8090 --dir=./pb/data \
+            --migrationsDir=./backend/pb_migrations --hooksDir=./backend/pb_hooks &
           for i in $(seq 1 20); do curl -fs http://127.0.0.1:8090/api/health && break; sleep 1; done
       - name: Unit, balance and PocketBase integration tests
         run: npm test

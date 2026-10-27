@@ -4,7 +4,13 @@ import { audio } from './audio';
 
 /** Shared app state: the save store, the chosen profile and its save. */
 export const app = {
-  store: new SaveStore('', (url, init) => fetch(url, init), window.localStorage),
+  // The game is served under a path (e.g. /serpent/ inside the Lazybutts Chat host), so the API
+  // lives next to index.html rather than at the site root.
+  store: new SaveStore(
+    new URL('.', window.location.href).pathname.replace(/\/$/, ''),
+    (url, init) => fetch(url, init),
+    window.localStorage,
+  ),
   profile: null as Profile | null,
   save: defaultSave(''),
 };

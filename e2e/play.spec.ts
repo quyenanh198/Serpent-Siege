@@ -1,27 +1,22 @@
 import { expect, test, type Page } from '@playwright/test';
 
-/** In-memory stand-in for the PocketBase profiles API. */
+/** In-memory stand-in for the game's API: one signed-in Chat player. */
 async function fakeServer(page: Page) {
-  const records = new Map<string, Record<string, unknown>>();
-  await page.route('**/api/collections/profiles/records**', async (route) => {
+  const record: { id: string; name: string; save: unknown } = { id: 'p1', name: 'Tester', save: null };
+  await page.route('**/api/serpent/**', async (route) => {
     const req = route.request();
-    const id = new URL(req.url()).pathname.split('/records/')[1];
+    const path = new URL(req.url()).pathname;
     const json = (status: number, body: unknown) =>
       route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
-    if (req.method() === 'GET' && !id) return json(200, { items: [...records.values()] });
-    if (req.method() === 'GET') return json(200, records.get(id));
-    if (req.method() === 'POST') {
-      const rec = { id: `p${records.size + 1}`, ...req.postDataJSON() };
-      records.set(rec.id, rec);
-      return json(200, rec);
+    if (path.endsWith('/api/serpent/me')) return json(200, { id: record.id, name: record.name });
+    if (path.endsWith('/api/serpent/save') && req.method() === 'GET') return json(200, record);
+    if (path.endsWith('/api/serpent/save') && req.method() === 'PATCH') {
+      Object.assign(record, req.postDataJSON());
+      return json(200, { ok: true });
     }
-    if (req.method() === 'PATCH') {
-      Object.assign(records.get(id)!, req.postDataJSON());
-      return json(200, records.get(id));
-    }
-    return json(405, {});
+    return json(404, {});
   });
-  return records;
+  return record;
 }
 
 /** Click at game coordinates (720×1280 canvas). */
@@ -44,13 +39,10 @@ type Win = {
   };
 };
 
-test('new player clears stage 1, picks an upgrade, earns gold and buys a rank', async ({ page }) => {
-  const records = await fakeServer(page);
-  page.on('dialog', (d) => d.accept('Tester'));
+test('a new Chat player clears stage 1, picks an upgrade, earns gold and buys a rank', async ({ page }) => {
+  const record = await fakeServer(page);
   await page.goto('/');
-  await page.waitForTimeout(1000);
-  await tap(page, 360, 420); // + New player (no profiles yet)
-  await page.waitForTimeout(800);
+  await page.waitForTimeout(1500); // signs in as the Chat player and opens the title screen
   await tap(page, 360, 560); // Stages
   await page.waitForTimeout(400);
   await tap(page, 195, 280); // stage 1-1
@@ -78,7 +70,7 @@ test('new player clears stage 1, picks an upgrade, earns gold and buys a rank', 
   }
   await page.waitForTimeout(1500);
   const save = () =>
-    [...records.values()][0].save as {
+    record.save as {
       gold: number;
       shop: { attack: number };
       stages: Record<string, { cleared: string[] }>;

@@ -2,11 +2,13 @@ import Phaser from 'phaser';
 import type { Profile } from '../../meta/store';
 import { app } from '../app';
 import { audio } from '../audio';
-import { button, COLORS, H, text, W } from '../ui';
+import { button, COLORS, text, W } from '../ui';
 
-const LAST = 'serpent-siege:lastProfile';
-
-/** Pick your name (no password; trusted LAN). */
+/**
+ * Sign-in: the game lives inside the Lazybutts Chat and plays as the Chat account, so there is
+ * no name to pick. The server reads the Chat session cookie; without one the player is sent to
+ * Chat to sign in.
+ */
 export class ProfileScene extends Phaser.Scene {
   constructor() {
     super('Profile');
@@ -14,52 +16,39 @@ export class ProfileScene extends Phaser.Scene {
 
   create() {
     text(this, W / 2, 200, 'Serpent Siege', 72, COLORS.gold, { fontStyle: 'bold' });
-    text(this, W / 2, 290, "Who's playing?", 34, COLORS.dim);
-    const status = text(this, W / 2, H - 60, 'Loading players…', 24, COLORS.dim);
+    const status = text(this, W / 2, 330, 'Signing in…', 30, COLORS.dim);
     this.input.once('pointerdown', () => audio.unlock());
-    void app.store.listProfiles().then((list) => {
-      status.setText(app.store.online ? '' : 'Server offline: playing with saves on this device');
-      this.showList(list);
-    });
-  }
-
-  private showList(list: Profile[]) {
-    const last = localStorage.getItem(LAST);
-    list.slice(0, 9).forEach((p, i) => {
-      button(this, W / 2, 400 + i * 92, 460, 76, p.name, () => this.pick(p), {
-        color: p.id === last ? 0x4a3f78 : undefined,
-      });
-    });
-    if (app.store.online) {
-      button(
-        this,
-        W / 2,
-        400 + Math.min(list.length, 9) * 92 + 20,
-        460,
-        76,
-        '+ New player',
-        () => this.create_(),
-        {
+    void app.store.whoami().then((who) => {
+      if (who.kind === 'player') {
+        void this.pick(who.profile);
+      } else if (who.kind === 'login') {
+        status.setText('Sign in to Lazybutts Chat to play.\nYour progress is saved to your Chat account.');
+        // Chat is served from the site root of the same host.
+        button(this, W / 2, 520, 460, 76, 'Open Chat', () => window.location.assign('/'), {
           color: 0x2d5a3f,
-        },
-      );
-    }
-  }
-
-  private async create_() {
-    const name = window.prompt('Your name (max 20 letters)')?.trim().slice(0, 20);
-    if (!name) return;
-    try {
-      const p = await app.store.createProfile(name);
-      await this.pick(p);
-    } catch (e) {
-      window.alert((e as Error).message);
-    }
+        });
+        button(this, W / 2, 620, 460, 76, 'Try again', () => this.scene.restart());
+      } else {
+        status.setText('Server offline.\nYou can play now; progress stays on this device.');
+        button(
+          this,
+          W / 2,
+          520,
+          460,
+          76,
+          'Play offline',
+          () => void this.pick({ id: 'local', name: 'Player' }),
+          {
+            color: 0x2d5a3f,
+          },
+        );
+        button(this, W / 2, 620, 460, 76, 'Try again', () => this.scene.restart());
+      }
+    });
   }
 
   private async pick(p: Profile) {
     audio.unlock();
-    localStorage.setItem(LAST, p.id);
     app.profile = p;
     app.save = await app.store.load(p);
     audio.setVolumes(app.save.settings.sfx, app.save.settings.music);

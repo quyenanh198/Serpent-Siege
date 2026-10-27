@@ -13,7 +13,8 @@ RUN apk add --no-cache ca-certificates unzip wget \
   && wget -q "https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/pocketbase_${PB_VERSION}_linux_${TARGETARCH}.zip" -O /tmp/pb.zip \
   && unzip -q /tmp/pb.zip -d /pb && rm /tmp/pb.zip
 COPY backend/pb_migrations /pb/pb_migrations
+COPY backend/pb_hooks /pb/pb_hooks
 COPY --from=web /app/dist /pb/pb_public
 EXPOSE 8090
 HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://127.0.0.1:8090/api/health || exit 1
-CMD ["/pb/pocketbase", "serve", "--http=0.0.0.0:8090", "--dir=/pb/pb_data", "--migrationsDir=/pb/pb_migrations", "--publicDir=/pb/pb_public"]
+CMD ["/pb/pocketbase", "serve", "--http=0.0.0.0:8090", "--dir=/pb/pb_data", "--migrationsDir=/pb/pb_migrations", "--hooksDir=/pb/pb_hooks", "--publicDir=/pb/pb_public"]
