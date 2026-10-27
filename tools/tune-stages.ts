@@ -15,7 +15,7 @@ import type { StageData } from '../src/core/types';
 const FILE = join(dirname(fileURLToPath(import.meta.url)), '../src/core/data/hpTweaks.json');
 /** Target: ranks needed = growth-only ranks + OFFSET (stage 1 is left easy as a tutorial). */
 const OFFSET = -6;
-const SEEDS = [11, 12, 13, 14];
+const SEEDS = [11, 12, 13, 14, 15, 16, 17, 18];
 
 const ranks = (r: number) => ({ attack: r, attackSpeed: 0, critChance: 0, critDamage: 0 });
 
@@ -26,7 +26,7 @@ function needed(stage: StageData): number {
   let hi = 140;
   while (hi - lo > 1) {
     const m = (lo + hi) >> 1;
-    if (wins(m) >= 3) hi = m;
+    if (wins(m) >= 6) hi = m;
     else lo = m;
   }
   return hi;
