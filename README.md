@@ -5,7 +5,22 @@ tap or drag to aim it at a snake of 4-ball segments before the snake reaches the
 upgrade balls for run upgrades, earn gold, and buy permanent upgrades in the shop. 20 stages in 2 worlds, each with
 Standard / Hard / Expert, plus an endless mode.
 
-Private game: runs on Ken's Mac mini (OrbStack) for local play. Do not deploy it to a public host.
+Private game for the family: it runs on the Lazybutts hub (Ken's Mac mini) at
+`https://chat.lazybutts.com/serpent/`, inside the family Chat. Players are Chat accounts: the game server asks Chat
+who the session cookie belongs to, so there is no separate sign-in and progress follows the account to any device.
+
+## How it plugs into Chat
+
+- PocketBase serves the game and keeps one `profiles` record per Chat user (`chat_id`, `name`, `save`).
+- `backend/pb_hooks/` adds the game's only API, `/api/serpent/me` and `/api/serpent/save`. Each request forwards just
+  the `lb_session` cookie to Chat's `GET /api/me` (`CHAT_API_URL`, default `http://chat:8082`; answers cached 10 s).
+  No session means `401`, and the game shows "Sign in to Lazybutts Chat".
+- The generic PocketBase records API is closed to everyone except the superuser, so a player can only reach their own
+  save. On the hub, Caddy also keeps the admin UI (`/_/`) and every other `/api/*` path off the internet.
+- The client works under any path (`/serpent/` on the hub): assets and API calls are relative to `index.html`.
+- On the hub it is deployed like the other apps: `apps/serpent-siege` submodule, `scripts/deploy.sh serpent --build`.
+
+The standalone instructions below still work on a LAN, but every player now needs a Chat session (set `CHAT_API_URL`).
 
 ## Play on the Mac mini (OrbStack)
 
@@ -38,13 +53,14 @@ full-screen app icon.
 ```sh
 npm ci
 npm run dev        # game at http://localhost:5173 (expects PocketBase on :8090 for saves; works offline too)
+node tests/fake-chat.mjs 8082 &   # fake Chat for local saves: set the cookie lb_session=alice (or bob) in the browser
 npm test           # unit, balance and save tests (set PB_URL to also run the PocketBase integration test)
 npm run e2e        # Playwright: new player clears stage 1, picks an upgrade, buys a shop rank
 npm run lint && npm run typecheck
 ```
 
 To run PocketBase locally without Docker: download it from https://pocketbase.io and run
-`pocketbase serve --dir=backend/pb_data --migrationsDir=backend/pb_migrations`.
+`CHAT_API_URL=http://127.0.0.1:8082 pocketbase serve --dir=backend/pb_data --migrationsDir=backend/pb_migrations --hooksDir=backend/pb_hooks`.
 
 ### Layout
 
