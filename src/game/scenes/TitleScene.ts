@@ -35,7 +35,6 @@ export class TitleScene extends Phaser.Scene {
       size: 38,
     });
     button(this, W / 2, 920, 480, 96, 'Settings', () => this.scene.start('Settings'), { size: 38 });
-    button(this, W / 2, 1040, 480, 80, 'Switch player', () => this.scene.start('Profile'), { size: 28 });
     if (!app.store.online)
       text(this, W / 2, 1180, 'Server offline: progress is kept on this device', 22, COLORS.dim);
   }
