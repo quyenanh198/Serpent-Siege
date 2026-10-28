@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { buyRank, isMaxed, rankCost, SHOP_INFO, SHOP_STATS, type ShopStat } from '../../meta/shop';
 import { app, fmtGold, persist } from '../app';
 import { audio } from '../audio';
-import { button, COLORS, goldLabel, panel, text, W } from '../ui';
+import { backdrop, button, COLORS, goldLabel, panel, text, W } from '../ui';
 
 export class ShopScene extends Phaser.Scene {
   private back: { scene: string; data?: object } = { scene: 'Title' };
@@ -18,6 +18,7 @@ export class ShopScene extends Phaser.Scene {
   }
 
   create() {
+    backdrop(this);
     goldLabel(this, fmtGold(app.save.gold));
     button(
       this,

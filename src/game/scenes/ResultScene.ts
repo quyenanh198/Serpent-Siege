@@ -4,7 +4,7 @@ import type { Difficulty } from '../../core/types';
 import type { GoldResult } from '../../meta/gold';
 import { applyEndlessRun, applyStageRun, isUnlocked } from '../../meta/progress';
 import { app, fmtGold, persist } from '../app';
-import { button, COLORS, goldLabel, panel, text, W } from '../ui';
+import { backdrop, button, COLORS, goldLabel, panel, text, W } from '../ui';
 
 export interface ResultData {
   mode: 'stage' | 'endless';
@@ -23,6 +23,7 @@ export class ResultScene extends Phaser.Scene {
   }
 
   create(r: ResultData) {
+    backdrop(this);
     let gold: GoldResult;
     let headline: string;
     let extra = '';

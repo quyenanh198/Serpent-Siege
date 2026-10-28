@@ -8,7 +8,7 @@ import type { Difficulty, StageData } from '../../core/types';
 import { app, vibrate } from '../app';
 import { audio } from '../audio';
 import { BALL_COLORS } from '../textures';
-import { button, COLORS, H, panel, text, W } from '../ui';
+import { backdrop, button, COLORS, H, panel, text, W } from '../ui';
 
 export type PlayData = { mode: 'stage'; stageIndex: number; difficulty: Difficulty } | { mode: 'endless' };
 
@@ -78,6 +78,7 @@ export class PlayScene extends Phaser.Scene {
         endlessStart: endlessStart(app.save.endless.bestSegment),
       });
     }
+    backdrop(this, true);
     this.drawMap();
 
     for (let i = 0; i < MAX_BALLS; i++) {
@@ -144,17 +145,19 @@ export class PlayScene extends Phaser.Scene {
       for (const p of pts) g.lineTo(p.x, p.y);
       g.strokePath();
     };
-    stroke(balance.ball.diameter + 14, 0x0c0a14, 0.9);
-    stroke(balance.ball.diameter + 8, 0x2b2540, 1);
-    stroke(2, 0x4a4268, 1);
+    stroke(balance.ball.diameter + 19, 0x071719, 0.9);
+    stroke(balance.ball.diameter + 13, 0x7a7460, 1);
+    stroke(balance.ball.diameter + 7, 0x294b48, 1);
+    stroke(2, 0xc4ae78, 0.65);
     const end = pts[pts.length - 1];
     const goal = this.stage?.goal.picture ?? ENDLESS.goal.picture;
-    this.add.circle(end.x, end.y, 48, 0xe5534b, 0.15).setDepth(0);
+    this.add.circle(end.x, end.y, 57, 0xea705f, 0.22).setDepth(0).setStrokeStyle(3, 0xe9b860, 0.65);
     this.add.image(end.x, end.y, `goal-${goal}`).setDepth(1).setScale(0.85);
   }
 
   private drawHud() {
-    this.add.rectangle(W / 2, HUD_H / 2, W, HUD_H, 0x0c0a14, 0.85).setDepth(8);
+    this.add.rectangle(W / 2, HUD_H / 2, W, HUD_H, 0x10282b, 0.96).setDepth(8);
+    this.add.rectangle(W / 2, HUD_H, W, 3, COLORS.accent, 0.7).setDepth(8);
     const title =
       this.data_.mode === 'stage'
         ? `${this.stage!.world}-${this.stage!.number - (this.stage!.world - 1) * 10} ${this.data_.difficulty[0].toUpperCase()}${this.data_.difficulty.slice(1)}`
@@ -294,7 +297,7 @@ export class PlayScene extends Phaser.Scene {
     // HUD: danger meter = how far the front is along the path
     const frac = Phaser.Math.Clamp(w.frontDistance() / w.path.length, 0, 1);
     this.meter.clear();
-    this.meter.fillStyle(0x2b2540, 1);
+    this.meter.fillStyle(0x375451, 1);
     this.meter.fillRoundedRect(330, 22, 260, 22, 11);
     this.meter.fillStyle(frac > 0.8 ? COLORS.bad : frac > 0.55 ? COLORS.accent : COLORS.good, 1);
     this.meter.fillRoundedRect(330, 22, Math.max(22, 260 * frac), 22, 11);

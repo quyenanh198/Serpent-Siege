@@ -5,18 +5,43 @@ export const W = 720;
 export const H = 1280;
 
 export const COLORS = {
-  bg: 0x14121f,
-  panel: 0x231f36,
-  panelHi: 0x2f2a48,
-  accent: 0xf5b942,
-  good: 0x4cd07d,
-  bad: 0xe5534b,
+  bg: 0x101d22,
+  panel: 0x1a3035,
+  panelHi: 0x28464a,
+  accent: 0xe9b860,
+  good: 0x67c99a,
+  bad: 0xea705f,
   text: '#f3eefc',
-  dim: '#9a93b5',
-  gold: '#f5c542',
+  dim: '#a3b9b5',
+  gold: '#f2cb7b',
 };
 
-export const FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+export const FONT = 'Georgia, "Times New Roman", serif';
+
+/** Decorative stonework shared by every screen; kept behind interactive objects. */
+export function backdrop(scene: Phaser.Scene, play = false): void {
+  const g = scene.add.graphics().setDepth(-20);
+  g.fillGradientStyle(0x0b171c, 0x0b171c, play ? 0x203b3c : 0x234746, play ? 0x203b3c : 0x234746);
+  g.fillRect(0, 0, W, H);
+  g.lineStyle(2, 0xb3d5bc, 0.045);
+  for (let y = 80; y < H; y += 112) g.lineBetween(0, y, W, y);
+  for (let x = 30; x < W; x += 115) g.lineBetween(x, 0, x, H);
+  g.lineStyle(3, 0xd5ad69, 0.28);
+  g.strokeRoundedRect(16, 16, W - 32, H - 32, 24);
+  g.lineStyle(1, 0xf2cb7b, 0.18);
+  g.strokeRoundedRect(24, 24, W - 48, H - 48, 20);
+  for (const [x, y] of [
+    [44, 44],
+    [W - 44, 44],
+    [44, H - 44],
+    [W - 44, H - 44],
+  ]) {
+    g.fillStyle(0xd9b778, 0.55);
+    g.fillCircle(x, y, 7);
+    g.fillStyle(0x112328, 1);
+    g.fillCircle(x, y, 3);
+  }
+}
 
 export function text(
   scene: Phaser.Scene,
@@ -53,10 +78,14 @@ export function button(
   const g = scene.add.graphics();
   const draw = (c: number) => {
     g.clear();
+    g.fillStyle(0x071316, 0.5);
+    g.fillRoundedRect(-w / 2, -h / 2 + 7, w, h, 18);
     g.fillStyle(c, 1);
     g.fillRoundedRect(-w / 2, -h / 2, w, h, 18);
-    g.lineStyle(2, 0xffffff, 0.12);
+    g.lineStyle(2, 0xe7c98d, 0.65);
     g.strokeRoundedRect(-w / 2, -h / 2, w, h, 18);
+    g.lineStyle(1, 0xffffff, 0.15);
+    g.lineBetween(-w / 2 + 22, -h / 2 + 9, w / 2 - 22, -h / 2 + 9);
   };
   draw(color);
   const t = text(scene, 0, 0, label, opts.size ?? 30, opts.disabled ? COLORS.dim : COLORS.text);
@@ -89,6 +118,8 @@ export function panel(
   const g = scene.add.graphics();
   g.fillStyle(color, alpha);
   g.fillRoundedRect(x - w / 2, y - h / 2, w, h, 22);
+  g.lineStyle(2, COLORS.accent, 0.45 * alpha);
+  g.strokeRoundedRect(x - w / 2, y - h / 2, w, h, 22);
   return g;
 }
 

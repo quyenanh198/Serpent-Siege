@@ -4,7 +4,7 @@ import { STAGES } from '../../core/stages';
 import { DIFFICULTIES, type Difficulty } from '../../core/types';
 import { isUnlocked } from '../../meta/progress';
 import { app, fmtGold } from '../app';
-import { backButton, button, COLORS, goldLabel, H, panel, text, W } from '../ui';
+import { backdrop, backButton, button, COLORS, goldLabel, H, panel, text, W } from '../ui';
 
 const DIFF_LABEL: Record<Difficulty, string> = { standard: 'Standard', hard: 'Hard', expert: 'Expert' };
 const DIFF_COLOR: Record<Difficulty, number> = { standard: 0x4cd07d, hard: 0xf5a742, expert: 0xe5534b };
@@ -26,6 +26,7 @@ export class StageSelectScene extends Phaser.Scene {
   }
 
   create() {
+    backdrop(this);
     backButton(this, 'Title');
     goldLabel(this, fmtGold(app.save.gold));
     text(this, W / 2, 140, `World ${this.world}`, 44, COLORS.text, { fontStyle: 'bold' });

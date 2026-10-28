@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import type { Profile } from '../../meta/store';
 import { app } from '../app';
 import { audio } from '../audio';
-import { button, COLORS, text, W } from '../ui';
+import { backdrop, button, COLORS, text, W } from '../ui';
 
 /**
  * Sign-in: the game lives inside the Lazybutts Chat and plays as the Chat account, so there is
@@ -15,6 +15,7 @@ export class ProfileScene extends Phaser.Scene {
   }
 
   create() {
+    backdrop(this);
     text(this, W / 2, 200, 'Serpent Siege', 72, COLORS.gold, { fontStyle: 'bold' });
     const status = text(this, W / 2, 330, 'Signing in…', 30, COLORS.dim);
     this.input.once('pointerdown', () => audio.unlock());

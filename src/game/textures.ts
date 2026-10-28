@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import balance from '../core/data/balance.json';
 
 /** All art is drawn in code at boot (see ASSETS.md). */
-export const BALL_COLORS = [0xe5534b, 0xf5a742, 0x4cd07d, 0x3fa7e8, 0xa66ee8, 0x2fc9b5];
+export const BALL_COLORS = [0xeb735e, 0xf1bc69, 0x72cd99, 0x6bb7cc, 0xb58cce, 0x69c9b9];
 const R = balance.ball.diameter / 2;
 
 function make(
@@ -19,16 +19,18 @@ function make(
 }
 
 function shadedBall(g: Phaser.GameObjects.Graphics, cx: number, cy: number, r: number, base = 0xffffff) {
-  g.fillStyle(0x000000, 0.25);
-  g.fillCircle(cx + 1, cy + 2, r);
+  g.fillStyle(0x071419, 0.5);
+  g.fillCircle(cx + 2, cy + 3, r);
   g.fillStyle(base, 1);
   g.fillCircle(cx, cy, r);
-  g.fillStyle(0x000000, 0.18);
-  g.fillCircle(cx + r * 0.25, cy + r * 0.3, r * 0.75);
-  g.fillStyle(base, 1);
-  g.fillCircle(cx - r * 0.08, cy - r * 0.08, r * 0.78);
-  g.fillStyle(0xffffff, 0.75);
-  g.fillCircle(cx - r * 0.35, cy - r * 0.4, r * 0.25);
+  g.lineStyle(2, 0x173739, 0.65);
+  g.strokeCircle(cx, cy, r - 1);
+  g.lineStyle(2, 0xffffff, 0.45);
+  g.strokeCircle(cx, cy, r * 0.68);
+  g.fillStyle(0xffffff, 0.42);
+  g.fillEllipse(cx - r * 0.27, cy - r * 0.34, r * 0.58, r * 0.27);
+  g.fillStyle(0xffffff, 0.65);
+  g.fillCircle(cx - r * 0.35, cy - r * 0.43, r * 0.1);
 }
 
 export function makeTextures(scene: Phaser.Scene): void {
@@ -37,16 +39,16 @@ export function makeTextures(scene: Phaser.Scene): void {
   make(scene, 'ball', s, s, (g) => shadedBall(g, c, c, R));
   make(scene, 'ballArmor', s, s, (g) => {
     shadedBall(g, c, c, R, 0xb8bcc8);
-    g.lineStyle(4, 0x5a5f6e, 1);
+    g.lineStyle(4, 0x24484c, 1);
     g.strokeCircle(c, c, R - 2);
-    g.fillStyle(0x5a5f6e, 1);
+    g.fillStyle(0xf1cc87, 1);
     for (let i = 0; i < 4; i++)
       g.fillCircle(c + Math.cos((i * Math.PI) / 2) * (R - 6), c + Math.sin((i * Math.PI) / 2) * (R - 6), 2.5);
   });
   make(scene, 'shield', s + 8, s + 8, (g) => {
-    g.lineStyle(3, 0x9fe3ff, 0.95);
+    g.lineStyle(3, 0xb9eee1, 0.95);
     g.strokeCircle((s + 8) / 2, (s + 8) / 2, R + 3);
-    g.fillStyle(0x9fe3ff, 0.18);
+    g.fillStyle(0xb9eee1, 0.18);
     g.fillCircle((s + 8) / 2, (s + 8) / 2, R + 3);
   });
   make(scene, 'ballUp', s + 8, s + 8, (g) => {
@@ -64,27 +66,33 @@ export function makeTextures(scene: Phaser.Scene): void {
   // Head: faces right (angle 0).
   make(scene, 'head', s + 16, s + 16, (g) => {
     const k = (s + 16) / 2;
-    shadedBall(g, k, k, R + 5, 0x4b8f3a);
+    shadedBall(g, k, k, R + 5, 0x58b184);
+    g.fillStyle(0x267963, 1);
+    g.fillTriangle(k + R - 4, k - 10, k + R + 9, k, k + R - 4, k + 10);
     g.fillStyle(0xffffff, 1);
     g.fillCircle(k + 6, k - 8, 6);
     g.fillCircle(k + 6, k + 8, 6);
-    g.fillStyle(0x111111, 1);
+    g.fillStyle(0x152a2d, 1);
     g.fillCircle(k + 8, k - 8, 3);
     g.fillCircle(k + 8, k + 8, 3);
-    g.fillStyle(0xd13b3b, 1);
+    g.fillStyle(0xf17d76, 1);
     g.fillTriangle(k + R + 4, k - 2, k + R + 14, k - 6, k + R + 14, k + 2);
   });
   make(scene, 'turret', 96, 96, (g) => {
-    g.fillStyle(0x000000, 0.3);
+    g.fillStyle(0x061517, 0.5);
     g.fillCircle(49, 51, 34);
-    g.fillStyle(0x50466e, 1);
+    g.fillStyle(0x315850, 1);
     g.fillCircle(48, 48, 34);
-    g.fillStyle(0x7a6aa8, 1);
+    g.fillStyle(0x7fc0a2, 1);
     g.fillCircle(48, 48, 26);
-    g.fillStyle(0xd8d0f0, 1);
+    g.lineStyle(3, 0xf2cb7b, 1);
+    g.strokeCircle(48, 48, 26);
+    g.fillStyle(0xe8d2a0, 1);
     g.fillRoundedRect(48, 40, 46, 16, 5);
-    g.fillStyle(0xf5b942, 1);
+    g.fillStyle(0x163b3d, 1);
     g.fillCircle(48, 48, 12);
+    g.fillStyle(0xf2cb7b, 1);
+    g.fillCircle(48, 48, 5);
   });
   make(scene, 'bullet', 16, 16, (g) => {
     g.fillStyle(0xffffff, 0.35);

@@ -43,7 +43,7 @@ test('a new Chat player clears stage 1, picks an upgrade, earns gold and buys a 
   const record = await fakeServer(page);
   await page.goto('/');
   await page.waitForTimeout(1500); // signs in as the Chat player and opens the title screen
-  await tap(page, 360, 560); // Stages
+  await tap(page, 360, 625); // Stages
   await page.waitForTimeout(400);
   await tap(page, 195, 280); // stage 1-1
   await page.waitForTimeout(300);

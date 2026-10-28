@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import type { Settings } from '../../meta/save';
 import { app, persist } from '../app';
 import { audio } from '../audio';
-import { backButton, button, COLORS, text, W } from '../ui';
+import { backdrop, backButton, button, COLORS, text, W } from '../ui';
 
 export class SettingsScene extends Phaser.Scene {
   constructor() {
@@ -10,6 +10,7 @@ export class SettingsScene extends Phaser.Scene {
   }
 
   create() {
+    backdrop(this);
     backButton(this, 'Title');
     text(this, W / 2, 150, 'Settings', 56, COLORS.text, { fontStyle: 'bold' });
     const s = app.save.settings;
