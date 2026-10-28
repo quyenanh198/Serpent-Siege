@@ -1,45 +1,40 @@
-import Phaser from 'phaser';
+﻿import Phaser from 'phaser';
 import { audio } from './audio';
 
 export const W = 720;
 export const H = 1280;
 
 export const COLORS = {
-  bg: 0x101d22,
-  panel: 0x1a3035,
-  panelHi: 0x28464a,
-  accent: 0xe9b860,
-  good: 0x67c99a,
-  bad: 0xea705f,
-  text: '#f3eefc',
-  dim: '#a3b9b5',
-  gold: '#f2cb7b',
+  bg: 0x092623,
+  panel: 0x103a34,
+  panelHi: 0x176353,
+  accent: 0xffc857,
+  good: 0x49d9a0,
+  bad: 0xff776b,
+  text: '#fff9e9',
+  dim: '#b6d5ca',
+  gold: '#ffd76c',
 };
 
-export const FONT = 'Georgia, "Times New Roman", serif';
+export const FONT = '"Trebuchet MS", Arial, sans-serif';
 
-/** Decorative stonework shared by every screen; kept behind interactive objects. */
 export function backdrop(scene: Phaser.Scene, play = false): void {
-  const g = scene.add.graphics().setDepth(-20);
-  g.fillGradientStyle(0x0b171c, 0x0b171c, play ? 0x203b3c : 0x234746, play ? 0x203b3c : 0x234746);
-  g.fillRect(0, 0, W, H);
-  g.lineStyle(2, 0xb3d5bc, 0.045);
-  for (let y = 80; y < H; y += 112) g.lineBetween(0, y, W, y);
-  for (let x = 30; x < W; x += 115) g.lineBetween(x, 0, x, H);
-  g.lineStyle(3, 0xd5ad69, 0.28);
-  g.strokeRoundedRect(16, 16, W - 32, H - 32, 24);
-  g.lineStyle(1, 0xf2cb7b, 0.18);
-  g.strokeRoundedRect(24, 24, W - 48, H - 48, 20);
-  for (const [x, y] of [
-    [44, 44],
-    [W - 44, 44],
-    [44, H - 44],
-    [W - 44, H - 44],
-  ]) {
-    g.fillStyle(0xd9b778, 0.55);
-    g.fillCircle(x, y, 7);
-    g.fillStyle(0x112328, 1);
-    g.fillCircle(x, y, 3);
+  if (!play && scene.textures.exists('jungle-journey')) {
+    scene.add
+      .image(W / 2, H / 2, 'jungle-journey')
+      .setDisplaySize(W, H)
+      .setDepth(-20);
+    scene.add.rectangle(W / 2, H / 2, W, H, 0x071c1b, 0.36).setDepth(-19);
+  } else if (play && scene.textures.exists('jungle-arena')) {
+    scene.add
+      .image(W / 2, H / 2, 'jungle-arena')
+      .setDisplaySize(W, H)
+      .setDepth(-20);
+    scene.add.rectangle(W / 2, H / 2, W, H, 0x062c25, 0.22).setDepth(-19);
+  } else {
+    const g = scene.add.graphics().setDepth(-20);
+    g.fillGradientStyle(0x092522, 0x092522, 0x0d3734, 0x0d3734);
+    g.fillRect(0, 0, W, H);
   }
 }
 
@@ -63,7 +58,6 @@ export interface ButtonOptions {
   disabled?: boolean;
 }
 
-/** A rounded button. Returns the container; `setLabel` updates its text. */
 export function button(
   scene: Phaser.Scene,
   x: number,
@@ -74,30 +68,30 @@ export function button(
   onClick: () => void,
   opts: ButtonOptions = {},
 ): Phaser.GameObjects.Container & { setLabel: (s: string) => void } {
-  const color = opts.disabled ? 0x3a3550 : (opts.color ?? COLORS.panelHi);
+  const base = opts.disabled ? 0x45675e : (opts.color ?? COLORS.panelHi);
   const g = scene.add.graphics();
-  const draw = (c: number) => {
+  const draw = (color: number) => {
     g.clear();
-    g.fillStyle(0x071316, 0.5);
-    g.fillRoundedRect(-w / 2, -h / 2 + 7, w, h, 18);
-    g.fillStyle(c, 1);
-    g.fillRoundedRect(-w / 2, -h / 2, w, h, 18);
-    g.lineStyle(2, 0xe7c98d, 0.65);
-    g.strokeRoundedRect(-w / 2, -h / 2, w, h, 18);
-    g.lineStyle(1, 0xffffff, 0.15);
-    g.lineBetween(-w / 2 + 22, -h / 2 + 9, w / 2 - 22, -h / 2 + 9);
+    g.fillStyle(0x031d1a, 0.38);
+    g.fillRoundedRect(-w / 2, -h / 2 + 7, w, h, h / 2);
+    g.fillStyle(color, 1);
+    g.fillRoundedRect(-w / 2, -h / 2, w, h, h / 2);
+    g.fillStyle(0xffffff, 0.13);
+    g.fillRoundedRect(-w / 2 + 12, -h / 2 + 6, w - 24, 5, 3);
   };
-  draw(color);
-  const t = text(scene, 0, 0, label, opts.size ?? 30, opts.disabled ? COLORS.dim : COLORS.text);
-  const c = scene.add.container(x, y, [g, t]) as Phaser.GameObjects.Container & {
+  draw(base);
+  const labelText = text(scene, 0, 0, label, opts.size ?? 28, opts.disabled ? '#b1c2b6' : COLORS.text, {
+    fontStyle: 'bold',
+  });
+  const c = scene.add.container(x, y, [g, labelText]) as Phaser.GameObjects.Container & {
     setLabel: (s: string) => void;
   };
   c.setSize(w, h);
-  c.setLabel = (s: string) => t.setText(s);
+  c.setLabel = (s: string) => labelText.setText(s);
   if (!opts.disabled) {
     c.setInteractive({ useHandCursor: true });
-    c.on('pointerover', () => draw(Phaser.Display.Color.ValueToColor(color).brighten(15).color));
-    c.on('pointerout', () => draw(color));
+    c.on('pointerover', () => draw(Phaser.Display.Color.ValueToColor(base).brighten(12).color));
+    c.on('pointerout', () => draw(base));
     c.on('pointerup', () => {
       audio.play('click');
       onClick();
@@ -117,17 +111,21 @@ export function panel(
 ) {
   const g = scene.add.graphics();
   g.fillStyle(color, alpha);
-  g.fillRoundedRect(x - w / 2, y - h / 2, w, h, 22);
-  g.lineStyle(2, COLORS.accent, 0.45 * alpha);
-  g.strokeRoundedRect(x - w / 2, y - h / 2, w, h, 22);
+  g.fillRoundedRect(x - w / 2, y - h / 2, w, h, 30);
   return g;
 }
 
-/** Gold counter in the top-right corner. */
 export function goldLabel(scene: Phaser.Scene, gold: string): Phaser.GameObjects.Text {
-  return text(scene, W - 30, 50, `● ${gold}`, 32, COLORS.gold).setOrigin(1, 0.5);
+  const g = scene.add.graphics();
+  g.fillStyle(0x082b28, 0.9);
+  g.fillRoundedRect(W - 180, 20, 160, 58, 29);
+  g.fillStyle(COLORS.accent, 1);
+  g.fillCircle(W - 148, 49, 15);
+  g.fillStyle(0xffffff, 0.45);
+  g.fillCircle(W - 152, 44, 5);
+  return text(scene, W - 32, 49, gold, 26, COLORS.gold, { fontStyle: 'bold' }).setOrigin(1, 0.5);
 }
 
 export function backButton(scene: Phaser.Scene, to: string, data?: object) {
-  return button(scene, 90, 50, 130, 64, '‹ Back', () => scene.scene.start(to, data), { size: 26 });
+  return button(scene, 66, 50, 72, 60, '‹', () => scene.scene.start(to, data), { size: 42, color: 0x103a34 });
 }

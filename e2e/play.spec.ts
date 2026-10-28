@@ -43,11 +43,11 @@ test('a new Chat player clears stage 1, picks an upgrade, earns gold and buys a 
   const record = await fakeServer(page);
   await page.goto('/');
   await page.waitForTimeout(1500); // signs in as the Chat player and opens the title screen
-  await tap(page, 360, 625); // Stages
+  await tap(page, 360, 930); // Continue journey
   await page.waitForTimeout(400);
-  await tap(page, 195, 280); // stage 1-1
+  await tap(page, 118, 280); // stage 1-1
   await page.waitForTimeout(300);
-  await tap(page, 360, 510); // Standard
+  await tap(page, 360, 1190); // Play standard
   await page.waitForFunction(() => (window as unknown as Win).__ss?.world.ballCount);
 
   // Aim like a player would (tap where the front ball is); weaken the snake so the test is quick.
@@ -81,9 +81,9 @@ test('a new Chat player clears stage 1, picks an upgrade, earns gold and buys a 
 
   // A first clear of stage 1 pays enough for one Attack rank (cost 10).
   expect(gold).toBeGreaterThanOrEqual(10);
-  await tap(page, 360, 1085); // Shop
+  await tap(page, 193, 1144); // Armory
   await page.waitForTimeout(500);
-  await tap(page, 570, 340); // Buy Attack
+  await tap(page, 590, 610); // Buy Attack
   await page.waitForTimeout(500);
   expect(save().shop.attack).toBe(1);
 });

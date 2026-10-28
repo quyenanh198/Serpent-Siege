@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+﻿import Phaser from 'phaser';
 import { app, fmtGold } from '../app';
 import { backdrop, button, COLORS, goldLabel, text, W } from '../ui';
 
@@ -6,48 +6,40 @@ export class TitleScene extends Phaser.Scene {
   constructor() {
     super('Title');
   }
-
   create() {
     backdrop(this);
     goldLabel(this, fmtGold(app.save.gold));
-    text(this, 42, 56, app.profile?.name ?? '', 24, COLORS.dim).setOrigin(0, 0.5);
-    const crest = this.add.graphics();
-    crest.fillStyle(0x244c49, 1);
-    crest.fillCircle(W / 2, 263, 112);
-    crest.lineStyle(5, COLORS.accent, 0.85);
-    crest.strokeCircle(W / 2, 263, 108);
-    crest.lineStyle(2, COLORS.accent, 0.4);
-    crest.strokeCircle(W / 2, 263, 92);
-    this.add
-      .image(W / 2, 263, 'head')
-      .setScale(2.6)
-      .setRotation(-0.5);
-    text(this, W / 2, 390, 'SERPENT', 72, COLORS.gold, { fontStyle: 'bold' });
-    text(this, W / 2, 465, 'SIEGE', 72, COLORS.gold, { fontStyle: 'bold' });
+    text(this, 32, 49, app.profile?.name ?? '', 23, COLORS.text, { fontStyle: 'bold' }).setOrigin(0, 0.5);
+    const shade = this.add.graphics();
+    shade.fillStyle(0x06211e, 0.96);
+    shade.fillRoundedRect(0, 650, W, 630, { tl: 70, tr: 70, bl: 0, br: 0 });
+    this.add.rectangle(W / 2, 687, 92, 7, COLORS.accent);
+    text(this, W / 2, 741, 'SERPENT SIEGE', 64, COLORS.text, { fontStyle: 'bold' });
+    text(this, W / 2, 798, 'DEFEND THE LAST SANCTUARY', 23, COLORS.gold, { fontStyle: 'bold' });
     const cleared = Object.values(app.save.stages).filter((s) => s.cleared.includes('standard')).length;
-    text(this, W / 2, 515, `STAGES CLEARED  ${cleared} / 20`, 22, COLORS.dim);
-
-    button(this, W / 2, 625, 480, 88, 'PLAY STAGES', () => this.scene.start('StageSelect'), {
-      size: 38,
-      color: 0x396659,
+    text(this, W / 2, 841, `${cleared} OF 20 STAGES CLEARED`, 21, COLORS.dim);
+    button(this, W / 2, 930, 570, 88, 'CONTINUE JOURNEY   ›', () => this.scene.start('StageSelect'), {
+      size: 30,
+      color: 0xdf794e,
     });
     button(
       this,
       W / 2,
-      735,
-      480,
-      88,
-      `ENDLESS  ·  BEST ${app.save.endless.bestSegment}`,
+      1030,
+      570,
+      78,
+      `ENDLESS SURVIVAL   ·   BEST ${app.save.endless.bestSegment}`,
       () => this.scene.start('Play', { mode: 'endless' }),
-      {
-        size: 34,
-      },
+      { size: 24, color: 0x176c5e },
     );
-    button(this, W / 2, 845, 480, 88, 'UPGRADES', () => this.scene.start('Shop', { back: 'Title' }), {
-      size: 38,
+    button(this, 203, 1144, 250, 84, 'ARMORY', () => this.scene.start('Shop', { back: 'Title' }), {
+      size: 28,
+      color: 0x24564c,
     });
-    button(this, W / 2, 955, 480, 88, 'SETTINGS', () => this.scene.start('Settings'), { size: 34 });
-    if (!app.store.online)
-      text(this, W / 2, 1180, 'Server offline: progress is kept on this device', 22, COLORS.dim);
+    button(this, 517, 1144, 250, 84, 'SETTINGS', () => this.scene.start('Settings'), {
+      size: 28,
+      color: 0x24564c,
+    });
+    if (!app.store.online) text(this, W / 2, 1235, 'Offline · progress stays on this device', 18, COLORS.dim);
   }
 }
