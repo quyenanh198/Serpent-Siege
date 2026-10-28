@@ -82,7 +82,7 @@ export class PlayScene extends Phaser.Scene {
     this.drawMap();
 
     for (let i = 0; i < MAX_BALLS; i++) {
-      this.balls.push(this.add.image(-100, -100, 'ball').setVisible(false).setDepth(2));
+      this.balls.push(this.add.image(-100, -100, 'ball-0').setVisible(false).setDepth(2));
       this.shields.push(this.add.image(-100, -100, 'shield').setVisible(false).setDepth(3));
     }
     for (let i = 0; i < MAX_LABELS; i++) {
@@ -102,9 +102,16 @@ export class PlayScene extends Phaser.Scene {
     }
     for (let i = 0; i < MAX_BULLETS; i++)
       this.bullets.push(this.add.image(0, 0, 'bullet').setVisible(false).setDepth(4));
-    this.head = this.add.image(0, 0, 'head').setDepth(4).setVisible(false);
+    this.head = this.add.image(0, 0, 'head').setDisplaySize(66, 53).setDepth(4).setVisible(false);
     this.aimLine = this.add.graphics().setDepth(1);
-    this.turret = this.add.image(this.world.turret.x, this.world.turret.y, 'turret').setDepth(6);
+    this.add
+      .circle(this.world.turret.x, this.world.turret.y, 50, 0x0d3e32, 0.9)
+      .setStrokeStyle(5, 0xe5bc62, 0.9)
+      .setDepth(5);
+    this.turret = this.add
+      .image(this.world.turret.x, this.world.turret.y, 'turret')
+      .setDisplaySize(112, 88)
+      .setDepth(6);
     this.emitter = this.add.particles(0, 0, 'spark', {
       speed: { min: 80, max: 320 },
       lifespan: 450,
@@ -145,14 +152,28 @@ export class PlayScene extends Phaser.Scene {
       for (const p of pts) g.lineTo(p.x, p.y);
       g.strokePath();
     };
-    stroke(balance.ball.diameter + 19, 0x071719, 0.9);
-    stroke(balance.ball.diameter + 13, 0x7a7460, 1);
-    stroke(balance.ball.diameter + 7, 0x294b48, 1);
-    stroke(2, 0xc4ae78, 0.65);
+    stroke(balance.ball.diameter + 36, 0x0b251f, 0.78);
+    stroke(balance.ball.diameter + 30, 0xe2ba67, 1);
+    stroke(balance.ball.diameter + 23, 0x554c34, 1);
+    stroke(balance.ball.diameter + 17, 0xb4a078, 1);
+    stroke(balance.ball.diameter + 3, 0xc8b88b, 1);
+    g.lineStyle(2, 0x6c6245, 0.75);
+    for (let d = 26; d < this.world.path.length - 20; d += 38) {
+      const a = this.world.path.pointAt(d - 4);
+      const b = this.world.path.pointAt(d + 4);
+      const len = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+      const nx = -(b.y - a.y) / len;
+      const ny = (b.x - a.x) / len;
+      const p = this.world.path.pointAt(d);
+      g.lineBetween(p.x - nx * 24, p.y - ny * 24, p.x + nx * 24, p.y + ny * 24);
+    }
     const end = pts[pts.length - 1];
     const goal = this.stage?.goal.picture ?? ENDLESS.goal.picture;
-    this.add.circle(end.x, end.y, 57, 0xea705f, 0.22).setDepth(0).setStrokeStyle(3, 0xe9b860, 0.65);
-    this.add.image(end.x, end.y, `goal-${goal}`).setDepth(1).setScale(0.85);
+    this.add.circle(end.x, end.y, 64, 0x0c4438, 0.92).setDepth(0).setStrokeStyle(5, 0xf1c460, 1);
+    this.add.circle(end.x, end.y, 54, 0x0b2e28, 0.85).setDepth(0).setStrokeStyle(2, 0x60d5a5, 0.8);
+    const goalImage = this.add.image(end.x, end.y, `goal-${goal}`).setDepth(1);
+    if (goal === 'hostage') goalImage.setDisplaySize(112, 112);
+    else goalImage.setScale(0.85);
   }
 
   private drawHud() {
@@ -252,10 +273,9 @@ export class PlayScene extends Phaser.Scene {
       }
       const img = this.balls[n++];
       img.setPosition(x, y).setVisible(true);
-      if (u.kind === 'upgrade') img.setTexture('ballUp').clearTint();
-      else if (u.type === 'armored')
-        img.setTexture('ballArmor').setTint(BALL_COLORS[u.index % BALL_COLORS.length] | 0x808080);
-      else img.setTexture('ball').setTint(BALL_COLORS[u.index % BALL_COLORS.length]);
+      if (u.kind === 'upgrade') img.setTexture('ballUp');
+      else if (u.type === 'armored') img.setTexture(`ball-armor-${u.index % BALL_COLORS.length}`);
+      else img.setTexture(`ball-${u.index % BALL_COLORS.length}`);
       if (u.shielded && shieldN < MAX_BALLS) this.shields[shieldN++].setPosition(x, y).setVisible(true);
       if (u.kind === 'segment' && ballInUnit === 1 && label < MAX_LABELS) {
         const t = this.labels[label++];
