@@ -30,25 +30,51 @@ export class ShopScene extends Phaser.Scene {
       () => this.scene.start(this.back.scene, this.back.data),
       { size: 26 },
     );
-    text(this, W / 2, 150, 'Shop', 56, COLORS.text, { fontStyle: 'bold' });
-    text(this, W / 2, 205, 'Permanent upgrades', 26, COLORS.dim);
-    SHOP_STATS.forEach((stat, i) => this.row(stat, 340 + i * 210));
+    text(this, W / 2, 145, 'THE ARMORY', 55, COLORS.gold, { fontStyle: 'bold' });
+    text(this, W / 2, 200, 'PERMANENT POWER', 23, COLORS.dim);
+    SHOP_STATS.forEach((stat, i) => this.row(stat, 330 + i * 218));
   }
 
   private row(stat: ShopStat, y: number) {
     const rank = app.save.shop[stat];
     const info = SHOP_INFO[stat];
-    panel(this, W / 2, y, 660, 185);
-    text(this, 60, y - 50, `${info.name}`, 34, COLORS.text, { fontStyle: 'bold' }).setOrigin(0, 0.5);
-    text(this, 60, y, `Rank ${rank}`, 26, COLORS.dim).setOrigin(0, 0.5);
-    text(this, 60, y + 45, `Now: ${info.effect(rank)}`, 24, COLORS.text).setOrigin(0, 0.5);
+    panel(this, W / 2, y, 648, 190);
+    const g = this.add.graphics();
+    g.fillStyle(0x122c30, 1);
+    g.fillCircle(110, y, 57);
+    g.lineStyle(3, COLORS.accent, 0.7);
+    g.strokeCircle(110, y, 55);
+    g.lineStyle(6, COLORS.accent, 1);
+    if (stat === 'attack') {
+      g.lineBetween(88, y + 24, 130, y - 24);
+      g.fillTriangle(132, y - 29, 110, y - 19, 124, y - 5);
+    } else if (stat === 'attackSpeed') {
+      g.strokeCircle(110, y, 24);
+      g.lineBetween(110, y, 126, y - 15);
+    } else if (stat === 'critChance') {
+      g.strokeCircle(110, y, 25);
+      g.lineBetween(110, y - 34, 110, y + 34);
+      g.lineBetween(76, y, 144, y);
+    } else {
+      g.fillStyle(COLORS.accent, 1);
+      g.fillTriangle(110, y - 30, 137, y + 20, 83, y + 20);
+    }
+    text(this, 184, y - 58, info.name.toUpperCase(), 30, COLORS.text, { fontStyle: 'bold' }).setOrigin(
+      0,
+      0.5,
+    );
+    text(this, 184, y - 14, info.effect(rank), 24, COLORS.dim).setOrigin(0, 0.5);
+    text(this, 184, y + 38, `RANK ${rank}`, 20, COLORS.gold).setOrigin(0, 0.5);
+    for (let i = 0; i < 5; i++) {
+      this.add.circle(310 + i * 25, y + 39, 7, i < Math.min(rank, 5) ? COLORS.accent : 0x395954);
+    }
     const maxed = isMaxed(stat, rank);
     const cost = rankCost(stat, rank);
     const afford = app.save.gold >= cost;
-    button(this, W - 150, y, 210, 110, maxed ? 'MAX' : `Buy\n● ${cost}`, () => void this.buy(stat), {
+    button(this, W - 126, y, 176, 100, maxed ? 'MAX' : `BUY\n${cost} GOLD`, () => void this.buy(stat), {
       disabled: maxed || !afford,
-      color: 0x2d5a3f,
-      size: 28,
+      color: 0x396659,
+      size: 24,
     });
   }
 

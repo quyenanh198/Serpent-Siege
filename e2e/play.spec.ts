@@ -81,7 +81,7 @@ test('a new Chat player clears stage 1, picks an upgrade, earns gold and buys a 
 
   // A first clear of stage 1 pays enough for one Attack rank (cost 10).
   expect(gold).toBeGreaterThanOrEqual(10);
-  await tap(page, 360, 1030); // Shop
+  await tap(page, 360, 1085); // Shop
   await page.waitForTimeout(500);
   await tap(page, 570, 340); // Buy Attack
   await page.waitForTimeout(500);

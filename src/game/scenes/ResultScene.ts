@@ -48,9 +48,17 @@ export class ResultScene extends Phaser.Scene {
     }
 
     goldLabel(this, fmtGold(app.save.gold));
-    text(this, W / 2, 220, headline, 52, r.won ? COLORS.gold : COLORS.text, { fontStyle: 'bold' });
-    if (extra) text(this, W / 2, 290, extra, 30, COLORS.gold);
-    panel(this, W / 2, 520, 620, 360);
+    const crest = this.add.graphics();
+    crest.fillStyle(r.won ? 0x315f54 : 0x563e3a, 1);
+    crest.fillCircle(W / 2, 160, 85);
+    crest.lineStyle(5, r.won ? COLORS.accent : COLORS.bad, 1);
+    crest.strokeCircle(W / 2, 160, 82);
+    text(this, W / 2, 160, r.won ? '★' : '!', 94, r.won ? COLORS.gold : COLORS.text);
+    text(this, W / 2, 290, headline.toUpperCase(), 45, r.won ? COLORS.gold : COLORS.text, {
+      fontStyle: 'bold',
+    });
+    if (extra) text(this, W / 2, 340, extra, 27, COLORS.gold);
+    panel(this, W / 2, 530, 620, 300);
     const lines: [string, number][] = [
       ['Segments destroyed', gold.base],
       ['Clear bonus', gold.clearBonus],
@@ -60,7 +68,7 @@ export class ResultScene extends Phaser.Scene {
     text(
       this,
       W / 2,
-      380,
+      414,
       `${r.destroyed} segments in ${Math.floor(r.time / 60)}:${String(r.time % 60).padStart(2, '0')}`,
       28,
       COLORS.dim,
@@ -68,12 +76,17 @@ export class ResultScene extends Phaser.Scene {
     lines
       .filter(([, v], i) => i === 0 || v > 0)
       .forEach(([label, v], i) => {
-        text(this, 140, 440 + i * 50, label, 28, COLORS.text).setOrigin(0, 0.5);
-        text(this, W - 140, 440 + i * 50, `+${v.toFixed(1)}`, 28, COLORS.gold).setOrigin(1, 0.5);
+        text(this, 98, 474 + i * 48, label, 27, COLORS.text).setOrigin(0, 0.5);
+        text(this, W - 98, 474 + i * 48, `+${v.toFixed(1)}`, 27, COLORS.gold).setOrigin(1, 0.5);
       });
-    text(this, W / 2, 650, `Gold earned: ${gold.total.toFixed(1)}`, 36, COLORS.gold, { fontStyle: 'bold' });
+    panel(this, W / 2, 735, 620, 90, 0x315f54);
+    text(this, 90, 735, 'GOLD EARNED', 27, COLORS.text).setOrigin(0, 0.5);
+    text(this, W - 90, 735, `+${gold.total.toFixed(1)}`, 37, COLORS.gold, { fontStyle: 'bold' }).setOrigin(
+      1,
+      0.5,
+    );
 
-    let y = 800;
+    let y = 855;
     const next = r.stageIndex !== undefined ? r.stageIndex + 1 : -1;
     if (r.mode === 'stage' && r.won && next < STAGES.length && isUnlocked(app.save, next, 'standard')) {
       button(
@@ -85,7 +98,7 @@ export class ResultScene extends Phaser.Scene {
         'Next stage',
         () => this.scene.start('Play', { mode: 'stage', stageIndex: next, difficulty: 'standard' }),
         {
-          color: 0x2d5a3f,
+          color: 0x396659,
         },
       );
       y += 115;
@@ -95,7 +108,7 @@ export class ResultScene extends Phaser.Scene {
         ? { mode: 'stage', stageIndex: r.stageIndex, difficulty: r.difficulty }
         : { mode: 'endless' };
     button(this, W / 2, y, 460, 90, r.won ? 'Play again' : 'Retry', () => this.scene.start('Play', again), {
-      color: 0x4a3f78,
+      color: 0x396659,
     });
     button(this, W / 2, y + 115, 460, 90, 'Shop', () => this.scene.start('Shop', { back: 'Result', again }));
     button(this, W / 2, y + 230, 460, 90, 'Menu', () =>
