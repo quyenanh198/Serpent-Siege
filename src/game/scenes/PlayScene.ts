@@ -1,5 +1,4 @@
-import Phaser from 'phaser';
-import balance from '../../core/data/balance.json';
+﻿import Phaser from 'phaser';
 import { buildStageRecipe, endlessStart, stageSpeed } from '../../core/difficulty';
 import { describe as describeUpgrade, RUN_UPGRADE_BY_ID } from '../../core/runUpgrades';
 import { STEP, World } from '../../core/sim';
@@ -7,8 +6,10 @@ import { ENDLESS, STAGES } from '../../core/stages';
 import type { Difficulty, StageData } from '../../core/types';
 import { app, vibrate } from '../app';
 import { audio } from '../audio';
+import { drawBridge } from '../bridge';
+import { landscapePath, landscapeTurret, PLAY_H, PLAY_W } from '../landscape';
 import { BALL_COLORS } from '../textures';
-import { backdrop, button, COLORS, H, panel, text, W } from '../ui';
+import { button, COLORS, H, panel, text, W } from '../ui';
 
 export type PlayData = { mode: 'stage'; stageIndex: number; difficulty: Difficulty } | { mode: 'endless' };
 
@@ -25,7 +26,6 @@ export class PlayScene extends Phaser.Scene {
   private ended = false;
   private paused = false;
   private balls: Phaser.GameObjects.Image[] = [];
-  private bodySpine!: Phaser.GameObjects.Graphics;
   private shields: Phaser.GameObjects.Image[] = [];
   private labels: Phaser.GameObjects.Text[] = [];
   private bullets: Phaser.GameObjects.Image[] = [];
@@ -57,13 +57,14 @@ export class PlayScene extends Phaser.Scene {
   }
 
   create() {
+    this.scale.setGameSize(PLAY_W, PLAY_H);
     const seed = (Date.now() & 0xffffff) | 1;
     if (this.data_.mode === 'stage') {
       const st = STAGES[this.data_.stageIndex];
       this.stage = st;
       this.world = new World({
-        path: st.path,
-        turret: st.turret,
+        path: landscapePath(st.path, st.id),
+        turret: landscapeTurret(st.turretLayout),
         ranks: app.save.shop,
         seed,
         recipe: buildStageRecipe(st, this.data_.difficulty, st.seed * 31 + seed),
@@ -72,27 +73,33 @@ export class PlayScene extends Phaser.Scene {
     } else {
       this.stage = undefined;
       this.world = new World({
-        path: ENDLESS.path,
-        turret: ENDLESS.turret,
+        path: landscapePath(ENDLESS.path),
+        turret: landscapeTurret(ENDLESS.turretLayout),
         ranks: app.save.shop,
         seed,
         endlessStart: endlessStart(app.save.endless.bestSegment),
       });
     }
-    backdrop(this, true);
+    this.add
+      .image(PLAY_W / 2, PLAY_H / 2, 'jungle-web-board')
+      .setDisplaySize(PLAY_W, PLAY_H)
+      .setDepth(-20);
     this.drawMap();
-    this.bodySpine = this.add.graphics().setDepth(1.5);
 
     for (let i = 0; i < MAX_BALLS; i++) {
-      this.balls.push(this.add.image(-100, -100, 'ball-0').setVisible(false).setDepth(2));
-      this.shields.push(this.add.image(-100, -100, 'shield').setVisible(false).setDepth(3));
+      this.balls.push(
+        this.add.image(-100, -100, 'ball-0').setDisplaySize(44, 44).setVisible(false).setDepth(2),
+      );
+      this.shields.push(
+        this.add.image(-100, -100, 'shield').setDisplaySize(54, 54).setVisible(false).setDepth(3),
+      );
     }
     for (let i = 0; i < MAX_LABELS; i++) {
       this.labels.push(
         this.add
           .text(0, 0, '', {
             fontFamily: 'system-ui, sans-serif',
-            fontSize: '15px',
+            fontSize: '19px',
             color: '#ffffff',
             fontStyle: 'bold',
           })
@@ -104,7 +111,7 @@ export class PlayScene extends Phaser.Scene {
     }
     for (let i = 0; i < MAX_BULLETS; i++)
       this.bullets.push(this.add.image(0, 0, 'bullet').setVisible(false).setDepth(4));
-    this.head = this.add.image(0, 0, 'head').setDisplaySize(66, 53).setDepth(4).setVisible(false);
+    this.head = this.add.image(0, 0, 'head').setDisplaySize(82, 65).setDepth(4).setVisible(false);
     this.aimLine = this.add.graphics().setDepth(1);
     this.add
       .circle(this.world.turret.x, this.world.turret.y, 50, 0x0d3e32, 0.9)
@@ -133,7 +140,10 @@ export class PlayScene extends Phaser.Scene {
       kb.on('keydown-ESC', () => this.togglePause());
       kb.on('keydown-P', () => this.togglePause());
     }
-    this.events.once('shutdown', () => this.input.keyboard?.removeAllListeners());
+    this.events.once('shutdown', () => {
+      this.input.keyboard?.removeAllListeners();
+      this.scale.setGameSize(W, H);
+    });
     (window as unknown as { __ss?: object }).__ss = { world: this.world, scene: this };
     this.handleEvents();
   }
@@ -145,31 +155,8 @@ export class PlayScene extends Phaser.Scene {
   }
 
   private drawMap() {
-    const g = this.add.graphics().setDepth(0);
-    const pts = this.world.path.samples(6);
-    const stroke = (w: number, color: number, alpha: number) => {
-      g.lineStyle(w, color, alpha);
-      g.beginPath();
-      g.moveTo(pts[0].x, pts[0].y);
-      for (const p of pts) g.lineTo(p.x, p.y);
-      g.strokePath();
-    };
-    stroke(balance.ball.diameter + 36, 0x0b251f, 0.78);
-    stroke(balance.ball.diameter + 30, 0xe2ba67, 1);
-    stroke(balance.ball.diameter + 23, 0x554c34, 1);
-    stroke(balance.ball.diameter + 17, 0xb4a078, 1);
-    stroke(balance.ball.diameter + 3, 0xc8b88b, 1);
-    g.lineStyle(2, 0x6c6245, 0.75);
-    for (let d = 26; d < this.world.path.length - 20; d += 38) {
-      const a = this.world.path.pointAt(d - 4);
-      const b = this.world.path.pointAt(d + 4);
-      const len = Math.hypot(b.x - a.x, b.y - a.y) || 1;
-      const nx = -(b.y - a.y) / len;
-      const ny = (b.x - a.x) / len;
-      const p = this.world.path.pointAt(d);
-      g.lineBetween(p.x - nx * 24, p.y - ny * 24, p.x + nx * 24, p.y + ny * 24);
-    }
-    const end = pts[pts.length - 1];
+    drawBridge(this, this.world.path);
+    const end = this.world.path.pointAt(this.world.path.length);
     const goal = this.stage?.goal.picture ?? ENDLESS.goal.picture;
     this.add.circle(end.x, end.y, 64, 0x0c4438, 0.92).setDepth(0).setStrokeStyle(5, 0xf1c460, 1);
     this.add.circle(end.x, end.y, 54, 0x0b2e28, 0.85).setDepth(0).setStrokeStyle(2, 0x60d5a5, 0.8);
@@ -179,8 +166,8 @@ export class PlayScene extends Phaser.Scene {
   }
 
   private drawHud() {
-    this.add.rectangle(W / 2, HUD_H / 2, W, HUD_H, 0x10282b, 0.96).setDepth(8);
-    this.add.rectangle(W / 2, HUD_H, W, 3, COLORS.accent, 0.7).setDepth(8);
+    this.add.rectangle(PLAY_W / 2, HUD_H / 2, PLAY_W, HUD_H, 0x10282b, 0.96).setDepth(8);
+    this.add.rectangle(PLAY_W / 2, HUD_H, PLAY_W, 3, COLORS.accent, 0.7).setDepth(8);
     const title =
       this.data_.mode === 'stage'
         ? `${this.stage!.world}-${this.stage!.number - (this.stage!.world - 1) * 10} ${this.data_.difficulty[0].toUpperCase()}${this.data_.difficulty.slice(1)}`
@@ -188,7 +175,7 @@ export class PlayScene extends Phaser.Scene {
     text(this, 24, 34, title, 28, COLORS.text, { fontStyle: 'bold' }).setOrigin(0, 0.5).setDepth(9);
     this.info = text(this, 24, 78, '', 22, COLORS.dim).setOrigin(0, 0.5).setDepth(9);
     this.meter = this.add.graphics().setDepth(9);
-    button(this, W - 60, 55, 84, 72, 'II', () => this.togglePause(), { size: 30 }).setDepth(9);
+    button(this, PLAY_W - 60, 55, 84, 72, 'II', () => this.togglePause(), { size: 30 }).setDepth(9);
   }
 
   update(_t: number, delta: number) {
@@ -246,7 +233,6 @@ export class PlayScene extends Phaser.Scene {
   private render_() {
     const w = this.world;
     const units = w.snake.units;
-    this.drawBody();
     // Balls
     let n = 0;
     let label = 0;
@@ -321,59 +307,12 @@ export class PlayScene extends Phaser.Scene {
     const frac = Phaser.Math.Clamp(w.frontDistance() / w.path.length, 0, 1);
     this.meter.clear();
     this.meter.fillStyle(0x375451, 1);
-    this.meter.fillRoundedRect(330, 22, 260, 22, 11);
+    this.meter.fillRoundedRect(660, 22, 450, 22, 11);
     this.meter.fillStyle(frac > 0.8 ? COLORS.bad : frac > 0.55 ? COLORS.accent : COLORS.good, 1);
-    this.meter.fillRoundedRect(330, 22, Math.max(22, 260 * frac), 22, 11);
+    this.meter.fillRoundedRect(660, 22, Math.max(22, 450 * frac), 22, 11);
     const left = w.mode === 'stage' ? `${w.snake.segmentsLeft()} segments left` : `Segment ${w.progress}`;
     const picks = Object.values(w.stacks).reduce((a, v) => a + (v ?? 0), 0);
     this.info.setText(`${left}  ·  ${picks} upgrades`);
-  }
-
-  /** The colored targets sit on a continuous scaled body; gaps remain visible after a split. */
-  private drawBody() {
-    const w = this.world;
-    const g = this.bodySpine;
-    g.clear();
-    const count = Math.min(w.ballCount, MAX_BALLS);
-    if (count < 2) return;
-    for (const [width, color] of [
-      [42, 0x092b22],
-      [36, 0xd6ad58],
-      [32, 0x117d60],
-    ] as const) {
-      g.lineStyle(width, color, 1);
-      let start = 0;
-      while (start < count - 1) {
-        let end = start;
-        while (
-          end + 1 < count &&
-          Math.hypot(w.ballX[end + 1] - w.ballX[end], w.ballY[end + 1] - w.ballY[end]) < 48
-        )
-          end++;
-        if (end > start) {
-          g.beginPath();
-          g.moveTo(w.ballX[start], w.ballY[start]);
-          for (let i = start + 1; i <= end; i++) g.lineTo(w.ballX[i], w.ballY[i]);
-          g.strokePath();
-        }
-        start = Math.max(end + 1, start + 1);
-      }
-    }
-    const last = count - 1;
-    const dx = w.ballX[last] - w.ballX[last - 1];
-    const dy = w.ballY[last] - w.ballY[last - 1];
-    const len = Math.hypot(dx, dy) || 1;
-    const nx = -dy / len;
-    const ny = dx / len;
-    g.fillStyle(0x0d7359, 1);
-    g.fillTriangle(
-      w.ballX[last] + nx * 15,
-      w.ballY[last] + ny * 15,
-      w.ballX[last] - nx * 15,
-      w.ballY[last] - ny * 15,
-      w.ballX[last] + (dx / len) * 28,
-      w.ballY[last] + (dy / len) * 28,
-    );
   }
 
   private floatText(x: number, y: number, s: string, color: string) {
@@ -385,20 +324,18 @@ export class PlayScene extends Phaser.Scene {
     this.overlay?.destroy();
     const w = this.world;
     const layer = this.add.container(0, 0).setDepth(20);
-    layer.add(this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.65).setInteractive());
-    layer.add(text(this, W / 2, 300, 'Choose an upgrade', 42, COLORS.gold, { fontStyle: 'bold' }));
+    layer.add(this.add.rectangle(PLAY_W / 2, PLAY_H / 2, PLAY_W, PLAY_H, 0x000000, 0.72).setInteractive());
+    layer.add(text(this, PLAY_W / 2, 160, 'CHOOSE AN UPGRADE', 48, COLORS.gold, { fontStyle: 'bold' }));
     w.offer.forEach((id, i) => {
       const def = RUN_UPGRADE_BY_ID[id];
       const stack = w.stacks[id] ?? 0;
-      const y = 470 + i * 210;
-      const card = this.add.container(W / 2, y);
-      const bg = panel(this, 0, 0, 620, 180, COLORS.panelHi);
-      card.add(bg);
-      card.add(text(this, -280, -45, `${i + 1}`, 26, COLORS.dim).setOrigin(0, 0.5));
-      card.add(text(this, 0, -45, def.name, 36, COLORS.text, { fontStyle: 'bold' }));
-      card.add(text(this, 0, 10, describeUpgrade(id), 26, COLORS.text));
-      card.add(text(this, 0, 55, `Level ${stack} → ${stack + 1} (max ${def.max})`, 22, COLORS.dim));
-      card.setSize(620, 180).setInteractive({ useHandCursor: true });
+      const card = this.add.container(230 + i * 410, 430);
+      card.add(panel(this, 0, 0, 370, 350, COLORS.panelHi));
+      card.add(text(this, 0, -110, `${i + 1}`, 42, COLORS.gold, { fontStyle: 'bold' }));
+      card.add(text(this, 0, -35, def.name, 35, COLORS.text, { fontStyle: 'bold' }));
+      card.add(text(this, 0, 35, describeUpgrade(id), 25, COLORS.text, { wordWrap: { width: 320 } }));
+      card.add(text(this, 0, 112, `Level ${stack} to ${stack + 1} / ${def.max}`, 22, COLORS.dim));
+      card.setSize(370, 350).setInteractive({ useHandCursor: true });
       card.on('pointerup', () => this.pick(i));
       layer.add(card);
     });
@@ -424,11 +361,14 @@ export class PlayScene extends Phaser.Scene {
     }
     this.paused = true;
     const layer = this.add.container(0, 0).setDepth(30);
-    layer.add(this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.7).setInteractive());
-    layer.add(text(this, W / 2, 420, 'Paused', 56, COLORS.text, { fontStyle: 'bold' }));
-    layer.add(button(this, W / 2, 560, 420, 90, 'Resume', () => this.togglePause(), { color: 0x4a3f78 }));
-    layer.add(button(this, W / 2, 680, 420, 90, 'Give up', () => this.finish(false)));
-    layer.add(button(this, W / 2, 800, 420, 90, 'Quit (no gold)', () => this.scene.start('Title')));
+    layer.add(this.add.rectangle(PLAY_W / 2, PLAY_H / 2, PLAY_W, PLAY_H, 0x000000, 0.72).setInteractive());
+    layer.add(panel(this, PLAY_W / 2, PLAY_H / 2, 550, 590, COLORS.panel));
+    layer.add(text(this, PLAY_W / 2, 220, 'PAUSED', 56, COLORS.text, { fontStyle: 'bold' }));
+    layer.add(
+      button(this, PLAY_W / 2, 350, 410, 80, 'RESUME', () => this.togglePause(), { color: 0x147d66 }),
+    );
+    layer.add(button(this, PLAY_W / 2, 460, 410, 80, 'GIVE UP', () => this.finish(false)));
+    layer.add(button(this, PLAY_W / 2, 570, 410, 80, 'QUIT · NO GOLD', () => this.scene.start('Title')));
     this.pauseLayer = layer;
   }
 
