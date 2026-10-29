@@ -25,6 +25,7 @@ export class PlayScene extends Phaser.Scene {
   private ended = false;
   private paused = false;
   private balls: Phaser.GameObjects.Image[] = [];
+  private bodySpine!: Phaser.GameObjects.Graphics;
   private shields: Phaser.GameObjects.Image[] = [];
   private labels: Phaser.GameObjects.Text[] = [];
   private bullets: Phaser.GameObjects.Image[] = [];
@@ -80,6 +81,7 @@ export class PlayScene extends Phaser.Scene {
     }
     backdrop(this, true);
     this.drawMap();
+    this.bodySpine = this.add.graphics().setDepth(1.5);
 
     for (let i = 0; i < MAX_BALLS; i++) {
       this.balls.push(this.add.image(-100, -100, 'ball-0').setVisible(false).setDepth(2));
@@ -244,6 +246,7 @@ export class PlayScene extends Phaser.Scene {
   private render_() {
     const w = this.world;
     const units = w.snake.units;
+    this.drawBody();
     // Balls
     let n = 0;
     let label = 0;
@@ -324,6 +327,53 @@ export class PlayScene extends Phaser.Scene {
     const left = w.mode === 'stage' ? `${w.snake.segmentsLeft()} segments left` : `Segment ${w.progress}`;
     const picks = Object.values(w.stacks).reduce((a, v) => a + (v ?? 0), 0);
     this.info.setText(`${left}  ·  ${picks} upgrades`);
+  }
+
+  /** The colored targets sit on a continuous scaled body; gaps remain visible after a split. */
+  private drawBody() {
+    const w = this.world;
+    const g = this.bodySpine;
+    g.clear();
+    const count = Math.min(w.ballCount, MAX_BALLS);
+    if (count < 2) return;
+    for (const [width, color] of [
+      [42, 0x092b22],
+      [36, 0xd6ad58],
+      [32, 0x117d60],
+    ] as const) {
+      g.lineStyle(width, color, 1);
+      let start = 0;
+      while (start < count - 1) {
+        let end = start;
+        while (
+          end + 1 < count &&
+          Math.hypot(w.ballX[end + 1] - w.ballX[end], w.ballY[end + 1] - w.ballY[end]) < 48
+        )
+          end++;
+        if (end > start) {
+          g.beginPath();
+          g.moveTo(w.ballX[start], w.ballY[start]);
+          for (let i = start + 1; i <= end; i++) g.lineTo(w.ballX[i], w.ballY[i]);
+          g.strokePath();
+        }
+        start = Math.max(end + 1, start + 1);
+      }
+    }
+    const last = count - 1;
+    const dx = w.ballX[last] - w.ballX[last - 1];
+    const dy = w.ballY[last] - w.ballY[last - 1];
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len;
+    const ny = dx / len;
+    g.fillStyle(0x0d7359, 1);
+    g.fillTriangle(
+      w.ballX[last] + nx * 15,
+      w.ballY[last] + ny * 15,
+      w.ballX[last] - nx * 15,
+      w.ballY[last] - ny * 15,
+      w.ballX[last] + (dx / len) * 28,
+      w.ballY[last] + (dy / len) * 28,
+    );
   }
 
   private floatText(x: number, y: number, s: string, color: string) {
