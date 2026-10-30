@@ -1,6 +1,6 @@
 # Serpent Siege
 
-Zuma-style snake shooter for a few friends, played in the browser on phones and PCs. A turret fires on its own;
+Zuma-style snake shooter for a few friends, designed first for desktop browsers with a 1280 × 800 landscape gameplay board. The menus remain portrait. A turret fires on its own;
 tap or drag to aim it at a snake of 4-ball segments before the snake reaches the end of the path. Break golden
 upgrade balls for run upgrades, earn gold, and buy permanent upgrades in the shop. 20 stages in 2 worlds, each with
 Standard / Hard / Expert, plus an endless mode.

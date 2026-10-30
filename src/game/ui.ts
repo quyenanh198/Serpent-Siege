@@ -18,19 +18,13 @@ export const COLORS = {
 
 export const FONT = '"Trebuchet MS", Arial, sans-serif';
 
-export function backdrop(scene: Phaser.Scene, play = false): void {
-  if (!play && scene.textures.exists('jungle-journey')) {
+export function backdrop(scene: Phaser.Scene): void {
+  if (scene.textures.exists('jungle-journey')) {
     scene.add
       .image(W / 2, H / 2, 'jungle-journey')
       .setDisplaySize(W, H)
       .setDepth(-20);
     scene.add.rectangle(W / 2, H / 2, W, H, 0x071c1b, 0.36).setDepth(-19);
-  } else if (play && scene.textures.exists('jungle-arena')) {
-    scene.add
-      .image(W / 2, H / 2, 'jungle-arena')
-      .setDisplaySize(W, H)
-      .setDepth(-20);
-    scene.add.rectangle(W / 2, H / 2, W, H, 0x062c25, 0.22).setDepth(-19);
   } else {
     const g = scene.add.graphics().setDepth(-20);
     g.fillGradientStyle(0x092522, 0x092522, 0x0d3734, 0x0d3734);

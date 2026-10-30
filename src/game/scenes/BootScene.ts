@@ -8,7 +8,6 @@ export class BootScene extends Phaser.Scene {
   preload() {
     this.load.image('jungle-journey', `${import.meta.env.BASE_URL}art/jungle-journey.webp`);
     this.load.image('serpent-armory', `${import.meta.env.BASE_URL}art/serpent-armory.webp`);
-    this.load.image('jungle-arena', `${import.meta.env.BASE_URL}art/jungle-arena.webp`);
     this.load.image('jungle-web-board', `${import.meta.env.BASE_URL}art/jungle-web-board.webp`);
     this.load.image('head', `${import.meta.env.BASE_URL}art/serpent-head.png`);
     this.load.image('turret', `${import.meta.env.BASE_URL}art/turret-jade.png`);

@@ -19,7 +19,7 @@ async function fakeServer(page: Page) {
   return record;
 }
 
-/** Click at game coordinates (720×1280 canvas). */
+/** Click portrait menu coordinates (720 × 1280 canvas). */
 async function tap(page: Page, x: number, y: number) {
   const box = (await page.locator('canvas').boundingBox())!;
   await page.mouse.click(box.x + (x * box.width) / 720, box.y + (y * box.height) / 1280);
