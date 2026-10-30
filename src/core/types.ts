@@ -1,5 +1,10 @@
 export type Difficulty = 'standard' | 'hard' | 'expert';
 export const DIFFICULTIES: Difficulty[] = ['standard', 'hard', 'expert'];
+export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
+  standard: 'STANDARD',
+  hard: 'HARD',
+  expert: 'EXTREME',
+};
 
 export type TurretLayout = 'center' | 'bottom';
 export type SegmentType = 'normal' | 'armored' | 'shielded';

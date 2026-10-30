@@ -3,7 +3,7 @@
 Zuma-style snake shooter for a few friends, designed first for desktop browsers with a 1280 × 800 landscape gameplay board. The menus remain portrait. A turret fires on its own;
 tap or drag to aim it at a snake of 4-ball segments before the snake reaches the end of the path. Break golden
 upgrade balls for run upgrades, earn gold, and buy permanent upgrades in the shop. 20 stages in 2 worlds, each with
-Standard / Hard / Expert, plus an endless mode.
+Standard / Hard / Extreme, plus an endless mode. Three illustrated gameplay maps rotate across the stages.
 
 Private game for the family: it runs on the Lazybutts hub (Ken's Mac mini) at
 `https://chat.lazybutts.com/serpent/`, inside the family Chat. Players are Chat accounts: the game server asks Chat

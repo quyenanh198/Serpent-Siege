@@ -1,9 +1,10 @@
 ﻿import Phaser from 'phaser';
 import { segmentCount } from '../../core/difficulty';
 import { STAGES } from '../../core/stages';
-import { DIFFICULTIES, type Difficulty } from '../../core/types';
+import { DIFFICULTIES, DIFFICULTY_LABELS, type Difficulty } from '../../core/types';
 import { isUnlocked } from '../../meta/progress';
 import { app, fmtGold } from '../app';
+import { arenaForStage } from '../arenas';
 import { backdrop, backButton, button, COLORS, goldLabel, text, W } from '../ui';
 
 const NODE_X = [118, 270, 458, 595, 540, 375, 190, 115, 280, 485];
@@ -50,6 +51,12 @@ export class StageSelectScene extends Phaser.Scene {
     if (this.world < 2)
       button(this, W - 62, 153, 70, 64, '›', () => this.scene.restart({ world: 2 }), { size: 39 });
 
+    DIFFICULTIES.forEach((difficulty, i) => {
+      const x = 146 + i * 205;
+      this.add.circle(x, 215, 7, DIFF_COLOR[difficulty]);
+      text(this, x + 14, 215, DIFFICULTY_LABELS[difficulty], 17, COLORS.dim).setOrigin(0, 0.5);
+    });
+
     const route = this.add.graphics();
     route.lineStyle(17, 0x092d28, 0.9);
     route.beginPath();
@@ -81,6 +88,12 @@ export class StageSelectScene extends Phaser.Scene {
     text(this, x, y, unlocked ? String(local + 1) : '×', 30, unlocked ? '#0b3b33' : COLORS.dim, {
       fontStyle: 'bold',
     });
+    DIFFICULTIES.forEach((difficulty, i) => {
+      const cleared = app.save.stages[STAGES[index].id]?.cleared.includes(difficulty) ?? false;
+      this.add
+        .circle(x - 18 + i * 18, y + 27, 6, cleared ? DIFF_COLOR[difficulty] : 0x6d837b)
+        .setStrokeStyle(1, cleared ? 0xffe7a5 : 0x314b43);
+    });
     this.add
       .zone(x, y, 94, 94)
       .setInteractive({ useHandCursor: unlocked })
@@ -92,6 +105,7 @@ export class StageSelectScene extends Phaser.Scene {
   private drawSheet() {
     this.sheet?.destroy();
     const st = STAGES[this.selected];
+    const arena = arenaForStage(st.id);
     const rec = app.save.stages[st.id];
     const layer = this.add.container(0, 0).setDepth(5);
     layer.add(this.add.rectangle(W / 2, 1035, W, 490, 0x062622, 0.98));
@@ -101,12 +115,13 @@ export class StageSelectScene extends Phaser.Scene {
         this,
         42,
         843,
-        st.boss ? 'BOSS ENCOUNTER' : `STAGE ${st.world}-${st.number - (st.world - 1) * 10}`,
+        `${st.boss ? 'BOSS ENCOUNTER' : `STAGE ${st.world}-${st.number - (st.world - 1) * 10}`}  ·  ${arena.name}`,
         22,
         COLORS.gold,
         { fontStyle: 'bold' },
       ).setOrigin(0, 0.5),
     );
+    layer.add(this.add.image(605, 878, arena.image).setDisplaySize(150, 94));
     layer.add(
       text(this, 42, 908, `DEFEND THE ${st.goal.picture.toUpperCase()}`, 43, COLORS.text, {
         fontStyle: 'bold',
@@ -132,7 +147,7 @@ export class StageSelectScene extends Phaser.Scene {
           1084,
           202,
           65,
-          d.toUpperCase(),
+          `${rec?.cleared.includes(d) ? '✓ ' : ''}${DIFFICULTY_LABELS[d]}`,
           () => {
             this.difficulty = d;
             this.drawSheet();

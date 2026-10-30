@@ -3,8 +3,9 @@ import { buildStageRecipe, endlessStart, stageSpeed } from '../../core/difficult
 import { describe as describeUpgrade, RUN_UPGRADE_BY_ID } from '../../core/runUpgrades';
 import { STEP, World } from '../../core/sim';
 import { ENDLESS, STAGES } from '../../core/stages';
-import type { Difficulty, StageData } from '../../core/types';
+import { DIFFICULTY_LABELS, type Difficulty, type StageData } from '../../core/types';
 import { app, vibrate } from '../app';
+import { arenaForStage } from '../arenas';
 import { audio } from '../audio';
 import { drawBridge } from '../bridge';
 import { landscapePath, landscapeTurret, PLAY_H, PLAY_W } from '../landscape';
@@ -81,7 +82,7 @@ export class PlayScene extends Phaser.Scene {
       });
     }
     this.add
-      .image(PLAY_W / 2, PLAY_H / 2, 'jungle-web-board')
+      .image(PLAY_W / 2, PLAY_H / 2, arenaForStage(this.stage?.id ?? 'endless').image)
       .setDisplaySize(PLAY_W, PLAY_H)
       .setDepth(-20);
     this.drawMap();
@@ -170,7 +171,7 @@ export class PlayScene extends Phaser.Scene {
     this.add.rectangle(PLAY_W / 2, HUD_H, PLAY_W, 3, COLORS.accent, 0.7).setDepth(8);
     const title =
       this.data_.mode === 'stage'
-        ? `${this.stage!.world}-${this.stage!.number - (this.stage!.world - 1) * 10} ${this.data_.difficulty[0].toUpperCase()}${this.data_.difficulty.slice(1)}`
+        ? `${this.stage!.world}-${this.stage!.number - (this.stage!.world - 1) * 10} ${DIFFICULTY_LABELS[this.data_.difficulty]}`
         : 'Endless';
     text(this, 24, 34, title, 28, COLORS.text, { fontStyle: 'bold' }).setOrigin(0, 0.5).setDepth(9);
     this.info = text(this, 24, 78, '', 22, COLORS.dim).setOrigin(0, 0.5).setDepth(9);
